@@ -2,6 +2,7 @@ from openrouter import OpenRouter
 from book import GutenbergBook
 import json
 from rapidfuzz import fuzz
+from pathlib import Path
 
 chapterize_schema = {
     "name": "book_analysis",
@@ -52,6 +53,11 @@ Return JSON with keys: 'sections' (list of objects, each containing a section na
 
 
 def chapterize(client: OpenRouter, book: GutenbergBook):
+    cache_path = Path(f"cache/{book.title.replace(' ', '_').lower()}_chapters.json")
+    if cache_path.exists():
+        with open(cache_path, "r") as f:
+            return json.load(f)
+
     candidates = []
     offset = 0
     for line in book.text.split("\n\n\n"):
@@ -61,7 +67,7 @@ def chapterize(client: OpenRouter, book: GutenbergBook):
 
     candidate_list = "\n\n".join([c[1] for c in candidates])
     response = client.chat.send(
-        model="mistralai/mistral-small-3.1-24b-instruct:free",
+        model="google/gemma-3-27b-it:free",  # TODO: figure out model fallback
         messages=[
             {
                 "role": "system",
@@ -76,6 +82,7 @@ def chapterize(client: OpenRouter, book: GutenbergBook):
         stream=False,
     )
 
+    print(f"Model: {response.model}")
     try:
         data = json.loads(response.choices[0].message.content)
         print("Response data: ", json.dumps(data, indent=4))
@@ -101,4 +108,6 @@ def chapterize(client: OpenRouter, book: GutenbergBook):
         end = chunks[i + 1]["start"] if i < len(chunks) - 1 else len(book.text)
         chunk["text"] = book.text[chunk["start"] : end]
 
+    with open(cache_path, "w") as f:
+        json.dump(chunks, f)
     return chunks
