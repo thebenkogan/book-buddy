@@ -1,4 +1,4 @@
-from pathlib import Path
+import concurrent.futures
 from openrouter import OpenRouter
 from book import GutenbergBook
 import json
@@ -11,28 +11,35 @@ TOKENS_PER_BATCH = 30_000
 def summarize(book: GutenbergBook, client: OpenRouter, chapters):
     print(f"Summarizing {book.title}")
 
-    # TODO: fix this logic to create batches first, then send them off in a thread pool
-    batch = []
-    size = 0
-    for i, chapter in enumerate(chapters):
-        if (
-            size == 0
-            or size + chapter["tokens"] < TOKENS_PER_BATCH
-            or i == len(chapters) - 1
-        ):
-            batch.append(chapter)
-            size += chapter["tokens"]
-            if i != len(chapters) - 1:
-                continue
-
-        summaries = summarize_batch(client, book, batch)
-        for s, c in zip(summaries, batch):
-            c["summary"] = s
-
-        size = chapter["tokens"]
-        batch = [chapter]
+    batches = create_chapter_batches(chapters)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        futures = [
+            executor.submit(summarize_batch, client, book, batch) for batch in batches
+        ]
+        for future in concurrent.futures.as_completed(futures):
+            batch, summaries = future.result()
+            for s, c in zip(summaries, batch):
+                c["summary"] = s
 
     return chapters
+
+
+def create_chapter_batches(chapters):
+    batches = []
+    batch = []
+    size = 0
+    for chapter in chapters:
+        if size == 0 or size + chapter["tokens"] <= TOKENS_PER_BATCH:
+            batch.append(chapter)
+            size += chapter["tokens"]
+        else:
+            batches.append(batch)
+            batch = [chapter]
+            size = chapter["tokens"]
+
+    if batch:
+        batches.append(batch)
+    return batches
 
 
 def summarize_schema(num_chapters):
@@ -109,4 +116,4 @@ def summarize_batch(client: OpenRouter, book: GutenbergBook, chapters):
     summaries = data["summaries"]
     if len(summaries) != len(chapters):
         raise ValueError(f"Expected {len(chapters)} summaries, got {len(summaries)}")
-    return summaries
+    return chapters, summaries
