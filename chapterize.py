@@ -3,6 +3,7 @@ from book import GutenbergBook
 import json
 from rapidfuzz import fuzz
 from pathlib import Path
+from checkpoint import checkpoint
 from chunking import count_tokens
 
 chapterize_schema = {
@@ -53,12 +54,8 @@ Return JSON with keys: 'sections' (list of objects, each containing a section na
 """
 
 
-def chapterize(client: OpenRouter, book: GutenbergBook):
-    # TODO: make a common cache decorator
-    cache_path = Path(f"cache/{book.title.replace(' ', '_').lower()}_chapters.json")
-    if cache_path.exists():
-        with open(cache_path, "r") as f:
-            return json.load(f)
+@checkpoint("chapters")
+def chapterize(book: GutenbergBook, client: OpenRouter):
     print(f"Chapterizing {book.title}")
 
     candidates = []
@@ -113,6 +110,4 @@ def chapterize(client: OpenRouter, book: GutenbergBook):
         chapter["text"] = book.text[chapter["start"] : end]
         chapter["tokens"] = count_tokens(chapter["text"])
 
-    with open(cache_path, "w") as f:
-        json.dump(chapters, f)
     return chapters

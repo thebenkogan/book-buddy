@@ -2,17 +2,13 @@ from pathlib import Path
 from openrouter import OpenRouter
 from book import GutenbergBook
 import json
+from checkpoint import checkpoint
 
 TOKENS_PER_BATCH = 30_000
 
 
-def summarize(client: OpenRouter, book: GutenbergBook, chapters):
-    cache_path = Path(
-        f"cache/{book.title.replace(' ', '_').lower()}_chapters_summaries.json"
-    )
-    if cache_path.exists():
-        with open(cache_path, "r") as f:
-            return json.load(f)
+@checkpoint("summaries")
+def summarize(book: GutenbergBook, client: OpenRouter, chapters):
     print(f"Summarizing {book.title}")
 
     # TODO: fix this logic to create batches first, then send them off in a thread pool
@@ -36,8 +32,6 @@ def summarize(client: OpenRouter, book: GutenbergBook, chapters):
         size = chapter["tokens"]
         batch = [chapter]
 
-    with open(cache_path, "w") as f:
-        json.dump(chapters, f)
     return chapters
 
 

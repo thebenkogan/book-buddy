@@ -10,8 +10,8 @@ load_dotenv()
 book = GutenbergBook("data/bk.txt")
 client = OpenRouter(api_key=os.getenv("OPENROUTER_API_KEY"))
 
-chapters = chapterize(client, book)
-chapters = summarize(client, book, chapters)
+chapters = chapterize(book, client)
+chapters = summarize(book, client, chapters)
 
 del chapters[34]["text"]
 print(chapters[34])
