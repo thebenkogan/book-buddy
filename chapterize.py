@@ -3,6 +3,7 @@ from book import GutenbergBook
 import json
 from rapidfuzz import fuzz
 from pathlib import Path
+from chunking import count_tokens
 
 chapterize_schema = {
     "name": "book_analysis",
@@ -53,10 +54,12 @@ Return JSON with keys: 'sections' (list of objects, each containing a section na
 
 
 def chapterize(client: OpenRouter, book: GutenbergBook):
+    # TODO: make a common cache decorator
     cache_path = Path(f"cache/{book.title.replace(' ', '_').lower()}_chapters.json")
     if cache_path.exists():
         with open(cache_path, "r") as f:
             return json.load(f)
+    print(f"Chapterizing {book.title}")
 
     candidates = []
     offset = 0
@@ -88,26 +91,28 @@ def chapterize(client: OpenRouter, book: GutenbergBook):
         print("Response data: ", json.dumps(data, indent=4))
     except Exception as e:
         print("Failed to parse response: ", response, e)
+        raise e
 
     sections = data["sections"]
     max_rank = max([s["rank"] for s in sections])
     ctx = {}
-    chunks = []
+    chapters = []
     for s in sections:
         rank = s["rank"]
         title = s["title"].lower()
         if rank == max_rank:
             offset, _ = max(candidates, key=lambda c: fuzz.ratio(title, c[1]))
-            chunks.append({"ctx": ctx.copy(), "start": offset, "chapter": title})
+            chapters.append({"ctx": ctx.copy(), "start": offset, "chapter": title})
         else:
             for r in range(rank + 1, max_rank):
                 ctx.pop(r, None)
             ctx[rank] = title
 
-    for i, chunk in enumerate(chunks):
-        end = chunks[i + 1]["start"] if i < len(chunks) - 1 else len(book.text)
-        chunk["text"] = book.text[chunk["start"] : end]
+    for i, chapter in enumerate(chapters):
+        end = chapters[i + 1]["start"] if i < len(chapters) - 1 else len(book.text)
+        chapter["text"] = book.text[chapter["start"] : end]
+        chapter["tokens"] = count_tokens(chapter["text"])
 
     with open(cache_path, "w") as f:
-        json.dump(chunks, f)
-    return chunks
+        json.dump(chapters, f)
+    return chapters
