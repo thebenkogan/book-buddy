@@ -2,9 +2,8 @@ from openrouter import OpenRouter
 from book import GutenbergBook
 import json
 from rapidfuzz import fuzz
-from pathlib import Path
 from checkpoint import checkpoint
-from chunking import count_tokens
+from embedding import count_tokens
 
 chapterize_schema = {
     "name": "book_analysis",
