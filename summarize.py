@@ -1,6 +1,7 @@
 import concurrent.futures
+from typing import List
 from openrouter import OpenRouter
-from book import GutenbergBook
+from book import Book, Chapter
 import json
 from checkpoint import checkpoint
 
@@ -8,10 +9,10 @@ TOKENS_PER_BATCH = 30_000
 
 
 @checkpoint("summaries")
-def summarize(book: GutenbergBook, client: OpenRouter, chapters):
+def summarize(book: Book, client: OpenRouter) -> Book:
     print(f"Summarizing {book.title}")
 
-    batches = create_chapter_batches(chapters)
+    batches = create_chapter_batches(book.chapters)
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
         futures = [
             executor.submit(summarize_batch, client, book, batch) for batch in batches
@@ -19,23 +20,23 @@ def summarize(book: GutenbergBook, client: OpenRouter, chapters):
         for future in concurrent.futures.as_completed(futures):
             batch, summaries = future.result()
             for s, c in zip(summaries, batch):
-                c["summary"] = s
+                c.summary = s
 
-    return chapters
+    return book
 
 
-def create_chapter_batches(chapters):
+def create_chapter_batches(chapters: List[Chapter]):
     batches = []
     batch = []
     size = 0
     for chapter in chapters:
-        if size == 0 or size + chapter["tokens"] <= TOKENS_PER_BATCH:
+        if size == 0 or size + chapter.tokens <= TOKENS_PER_BATCH:
             batch.append(chapter)
-            size += chapter["tokens"]
+            size += chapter.tokens
         else:
             batches.append(batch)
             batch = [chapter]
-            size = chapter["tokens"]
+            size = chapter.tokens
 
     if batch:
         batches.append(batch)
@@ -65,11 +66,11 @@ def summarize_schema(num_chapters):
     }
 
 
-def prompt(chapters):
+def prompt(chapters: List[Chapter]):
     texts = []
     for c in chapters:
-        ctx = "|".join([v for _, v in sorted(c["ctx"].items())])
-        texts.append(f"START OF NEW CHAPTER ({ctx}):\n\n{c['text']}\n\n")
+        ctx = "|".join([v for _, v in sorted(c.context.items())])
+        texts.append(f"START OF NEW CHAPTER ({ctx}):\n\n{c.text}\n\n")
     texts = "".join(texts)
 
     return f"""
@@ -83,11 +84,11 @@ Return JSON with keys: 'summaries' (list of {len(chapters)} strings)",
 """
 
 
-def summarize_batch(client: OpenRouter, book: GutenbergBook, chapters):
+def summarize_batch(client: OpenRouter, book: Book, chapters: List[Chapter]):
     print(f"Summarizing {len(chapters)} chapters")
 
     response = client.chat.send(
-        model="google/gemma-3-27b-it:free",  # TODO: figure out model fallback
+        model="openai/gpt-5-nano",  # TODO: figure out model fallback
         messages=[
             {
                 "role": "system",

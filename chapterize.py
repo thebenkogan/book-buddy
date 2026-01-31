@@ -1,5 +1,6 @@
+from typing import List
 from openrouter import OpenRouter
-from book import GutenbergBook
+from book import Book, Chapter
 import json
 from rapidfuzz import fuzz
 from checkpoint import checkpoint
@@ -43,9 +44,14 @@ def prompt(candidate_list):
 f"Below is a list of candidate lines found throughout the book. 
 Extract all section headings and discard any lines that are not section headings. 
 Each extracted heading should keep as much text as possible, i.e. keep the section name (e.g. 'PART', 'CHAPTER', etc), number, and the title if it exists. 
+
 For each found section heading, also include it's rank. For example, if the book has parts, each with books, and each book with chapters, then:
 each PART has rank 1, each BOOK has rank 2, and each CHAPTER has rank 3.
 If only chapters are found, then each CHAPTER has rank 1.
+
+IMPORTANT: each section type should have the same rank number, regardless of if the preceding section types are present.
+For example, if PART = rank 1, BOOK = rank 2, CHAPTER = rank 3, then each CHAPTER should have rank 3 ALWAYS.
+This could happen if PART or BOOK are not present, e.g. for the epilogue.
 
 \n\nLINES: {candidate_list} \n\n 
 
@@ -54,7 +60,7 @@ Return JSON with keys: 'sections' (list of objects, each containing a section na
 
 
 @checkpoint("chapters")
-def chapterize(book: GutenbergBook, client: OpenRouter):
+def chapterize(book: Book, client: OpenRouter) -> Book:
     print(f"Chapterizing {book.title}")
 
     candidates = []
@@ -66,7 +72,7 @@ def chapterize(book: GutenbergBook, client: OpenRouter):
 
     candidate_list = "\n\n".join([c[1] for c in candidates])
     response = client.chat.send(
-        model="google/gemma-3-27b-it:free",  # TODO: figure out model fallback
+        model="openai/gpt-4o-mini",  # TODO: figure out model fallback
         messages=[
             {
                 "role": "system",
@@ -92,21 +98,23 @@ def chapterize(book: GutenbergBook, client: OpenRouter):
     sections = data["sections"]
     max_rank = max([s["rank"] for s in sections])
     ctx = {}
-    chapters = []
+    chapters: List[Chapter] = []
     for s in sections:
         rank = s["rank"]
         title = s["title"].lower()
         if rank == max_rank:
             offset, _ = max(candidates, key=lambda c: fuzz.ratio(title, c[1]))
-            chapters.append({"ctx": ctx.copy(), "start": offset, "chapter": title})
+            chapter = Chapter(context=ctx.copy(), start=offset, name=title)
+            chapters.append(chapter)
         else:
             for r in range(rank + 1, max_rank):
                 ctx.pop(r, None)
             ctx[rank] = title
 
     for i, chapter in enumerate(chapters):
-        end = chapters[i + 1]["start"] if i < len(chapters) - 1 else len(book.text)
-        chapter["text"] = book.text[chapter["start"] : end]
-        chapter["tokens"] = count_tokens(chapter["text"])
+        end = chapters[i + 1].start if i < len(chapters) - 1 else len(book.text)
+        chapter.text = book.text[chapter.start : end]
+        chapter.tokens = count_tokens(chapter.text)
 
-    return chapters
+    book.chapters = chapters
+    return book

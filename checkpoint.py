@@ -1,27 +1,23 @@
-import json
 from pathlib import Path
-from book import GutenbergBook
+from book import Book, GutenbergBook
 
 
 def checkpoint(name: str):
     def decorator(func):
         def wrapper(*args, **kwargs):
-            if len(args) == 0 or not isinstance(args[0], GutenbergBook):
-                raise ValueError(
-                    "First argument must be a GutenbergBook for checkpointing"
-                )
-            book: GutenbergBook = args[0]
+            if len(args) == 0 or not isinstance(args[0], Book):
+                raise ValueError("First argument must be a Book for checkpointing")
+            book: Book = args[0]
             cache_path = Path(
                 f"cache/{book.title.replace(' ', '_').lower()}_{name}.json"
             )
             if cache_path.exists():
-                with open(cache_path, "r") as f:
-                    return json.load(f)
+                # TODO: remove GutenbergBook hardcode, use type selector parser
+                return GutenbergBook.model_validate_json(cache_path.read_text())
 
-            result = func(*args, **kwargs)
+            result: Book = func(*args, **kwargs)
 
-            with open(cache_path, "w") as f:
-                json.dump(result, f)
+            cache_path.write_text(result.model_dump_json())
 
             return result
 
