@@ -12,8 +12,7 @@ def checkpoint(name: str):
                 f"cache/{book.title.replace(' ', '_').lower()}_{name}.json"
             )
             if cache_path.exists():
-                # TODO: remove GutenbergBook hardcode, use type selector parser
-                return GutenbergBook.model_validate_json(cache_path.read_text())
+                return book.__class__.model_validate_json(cache_path.read_text())
 
             result: Book = func(*args, **kwargs)
 

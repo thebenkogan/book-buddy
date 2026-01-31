@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from book import GutenbergBook
 from chapterize import chapterize
 from embedding import chunk_and_embed
+from query import query
 from summarize import summarize
 
 load_dotenv()
@@ -14,7 +15,9 @@ client = OpenRouter(api_key=os.getenv("OPENROUTER_API_KEY"))
 book = chapterize(book, client)
 book = summarize(book, client)
 book = chunk_and_embed(book, client, model="qwen/qwen3-embedding-8b")
-# TODO: support search, do cosine similarity on embeddings
 
-
-print(book.chapters[22])
+query(
+    book,
+    client,
+    "How does Ivan learn that Smerdyakov killed himself?",
+)

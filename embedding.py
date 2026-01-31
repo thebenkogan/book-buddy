@@ -4,6 +4,7 @@ import semchunk
 import tiktoken
 from book import Book, Chunk
 from checkpoint import checkpoint
+import numpy as np
 
 TOKENS_PER_EMBED_CALL = 200_000
 
@@ -70,3 +71,29 @@ def create_chunk_batches(chunks: List[Chunk]):
     if batch:
         batches.append(batch)
     return batches
+
+
+NUM_TOP_CHUNKS = 3
+
+
+def get_best_chunks(book: Book, client: OpenRouter, query: str) -> List[Chunk]:
+    resp = client.embeddings.generate(model=book.embedding_model, input=query)
+    query_embedding = resp.data[0].embedding
+    query_norm = query_embedding / np.linalg.norm(query_embedding)
+
+    all_embeddings = []
+    idx_to_chunk = {}
+    i = 0
+    for chapter in book.chapters:
+        for chunk in chapter.chunks:
+            all_embeddings.append(chunk.embedding)
+            idx_to_chunk[i] = chunk
+            i += 1
+
+    chunk_embeddings = np.array(all_embeddings)
+    chunk_norm = chunk_embeddings / np.linalg.norm(
+        chunk_embeddings, axis=1, keepdims=True
+    )
+    similarities = np.dot(chunk_norm, query_norm)
+    indices = np.argsort(similarities)[::-1][:NUM_TOP_CHUNKS]
+    return [idx_to_chunk[i] for i in indices]
