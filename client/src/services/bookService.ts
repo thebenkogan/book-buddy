@@ -1,4 +1,4 @@
-import { Book, BookContent, AISummary } from '@/types/types';
+import { Book, BookContent, AISummary, TableOfContents } from '@/types/types';
 
 // Mock data for development - replace with actual API calls to your Python backend
 const mockBooks: Book[] = [
@@ -37,6 +37,74 @@ The abnormal mind is quick to detect and attach itself to this quality when it a
 
 Most of the confidences were unsought — frequently I have feigned sleep, preoccupation, or a hostile levity when I realized by some unmistakable sign that an intimate revelation was quivering on the horizon; for the intimate revelations of young men, or at least the terms in which they express them, are usually plagiaristic and marred by obvious suppressions.`;
 
+const mockTableOfContents: TableOfContents = {
+  chapters: [
+    {
+      id: 'ch1',
+      name: 'In My Younger Years',
+      context: { 1: 'PART ONE', 2: 'THE BEGINNING' },
+      startPosition: 0,
+      endPosition: 1000,
+    },
+    {
+      id: 'ch2',
+      name: 'The Summer of 1922',
+      context: { 1: 'PART ONE', 2: 'THE BEGINNING' },
+      startPosition: 1001,
+      endPosition: 2000,
+    },
+    {
+      id: 'ch3',
+      name: 'The Party',
+      context: { 1: 'PART ONE', 2: 'THE BEGINNING' },
+      startPosition: 2001,
+      endPosition: 3000,
+    },
+    {
+      id: 'ch4',
+      name: 'Meeting Gatsby',
+      context: { 1: 'PART TWO', 2: 'THE DISCOVERY' },
+      startPosition: 3001,
+      endPosition: 4000,
+    },
+    {
+      id: 'ch5',
+      name: 'The Green Light',
+      context: { 1: 'PART TWO', 2: 'THE DISCOVERY' },
+      startPosition: 4001,
+      endPosition: 5000,
+    },
+    {
+      id: 'ch6',
+      name: 'Daisy and Gatsby',
+      context: { 1: 'PART TWO', 2: 'THE DISCOVERY' },
+      startPosition: 5001,
+      endPosition: 6000,
+    },
+    {
+      id: 'ch7',
+      name: 'The Confrontation',
+      context: { 1: 'PART THREE', 2: 'THE RECKONING' },
+      startPosition: 6001,
+      endPosition: 7000,
+    },
+    {
+      id: 'ch8',
+      name: 'The Tragedy',
+      context: { 1: 'PART THREE', 2: 'THE RECKONING' },
+      startPosition: 7001,
+      endPosition: 8000,
+    },
+    {
+      id: 'ch9',
+      name: 'After the Fall',
+      context: { 1: 'PART THREE', 2: 'THE RECKONING' },
+      startPosition: 8001,
+      endPosition: 9000,
+    },
+  ],
+};
+
 // API functions - replace URLs with your actual Python API endpoints
 const API_BASE_URL = 'http://localhost:8000/api'; // Update with your API URL
 
@@ -60,6 +128,16 @@ export const getBookContent = async (bookId: string): Promise<BookContent> => {
       text: mockContent,
       currentPosition: 0,
     }), 300);
+  });
+};
+
+export const getTableOfContents = async (bookId: string): Promise<TableOfContents> => {
+  // TODO: Replace with actual API call
+  // const response = await fetch(`${API_BASE_URL}/books/${bookId}/toc`);
+  // return response.json();
+  
+  return new Promise((resolve) => {
+    setTimeout(() => resolve(mockTableOfContents), 300);
   });
 };
 

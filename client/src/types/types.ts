@@ -12,6 +12,20 @@ export interface BookContent {
   currentPosition: number;
 }
 
+export interface Chapter {
+  id: string;
+  name: string;
+  context?: {
+    [rank: number]: string;
+  };
+  startPosition: number;
+  endPosition: number;
+}
+
+export interface TableOfContents {
+  chapters: Chapter[];
+}
+
 export interface AISummary {
   summary: string;
   keyPoints: string[];

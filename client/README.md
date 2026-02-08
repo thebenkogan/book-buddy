@@ -1,1 +1,1 @@
-# Vibe Coded Client lol
+# Vibe coded UI

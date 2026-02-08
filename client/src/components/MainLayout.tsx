@@ -1,17 +1,20 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import BookSidebar from '@/components/BookSidebar';
 import ReadingView from '@/components/ReadingView';
 import AIView from '@/components/AIView';
-import { BookOpen, Sparkles } from 'lucide-react';
+import TableOfContents from '@/components/TableOfContents';
+import { BookOpen } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { getBooks } from '@/services/bookService';
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
+import { Chapter } from '@/types/types';
 
 const MainLayout = () => {
   const { bookId } = useParams();
-  const [activeTab, setActiveTab] = useState('reading');
+  const [currentPosition, setCurrentPosition] = useState(0);
+  const [scrollToChapter, setScrollToChapter] = useState<Chapter | null>(null);
 
   const { data: books } = useQuery({
     queryKey: ['books'],
@@ -19,6 +22,12 @@ const MainLayout = () => {
   });
 
   const currentBook = books?.find(b => b.id === bookId);
+
+  const handleChapterClick = (chapter: Chapter) => {
+    setScrollToChapter(chapter);
+    // Reset after a short delay to allow for multiple clicks on the same chapter
+    setTimeout(() => setScrollToChapter(null), 100);
+  };
 
   return (
     <div className="flex min-h-screen w-full">
@@ -38,29 +47,43 @@ const MainLayout = () => {
               </div>
             </header>
 
-            {/* Tabs */}
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
-              <div className="border-b bg-white px-6">
-                <TabsList className="h-12">
-                  <TabsTrigger value="reading" className="gap-2">
-                    <BookOpen size={18} />
-                    Reading View
-                  </TabsTrigger>
-                  <TabsTrigger value="ai" className="gap-2">
-                    <Sparkles size={18} />
-                    AI Analysis
-                  </TabsTrigger>
-                </TabsList>
-              </div>
-
-              <TabsContent value="reading" className="flex-1 m-0 overflow-hidden">
-                <ReadingView bookId={bookId} />
-              </TabsContent>
-
-              <TabsContent value="ai" className="flex-1 m-0 overflow-hidden">
-                <AIView bookId={bookId} />
-              </TabsContent>
-            </Tabs>
+            {/* Resizable Panes */}
+            <div className="flex-1 overflow-hidden">
+              <ResizablePanelGroup direction="horizontal" className="h-full">
+                {/* Table of Contents */}
+                <ResizablePanel defaultSize={20} minSize={15} maxSize={30}>
+                  <div className="h-full p-4 bg-gray-50/50">
+                    <TableOfContents 
+                      bookId={bookId} 
+                      currentPosition={currentPosition}
+                      onChapterClick={handleChapterClick}
+                    />
+                  </div>
+                </ResizablePanel>
+                
+                <ResizableHandle withHandle />
+                
+                {/* Reading View */}
+                <ResizablePanel defaultSize={45} minSize={30}>
+                  <div className="h-full bg-white">
+                    <ReadingView 
+                      bookId={bookId} 
+                      onPositionChange={setCurrentPosition}
+                      scrollToChapter={scrollToChapter}
+                    />
+                  </div>
+                </ResizablePanel>
+                
+                <ResizableHandle withHandle />
+                
+                {/* AI Analysis View */}
+                <ResizablePanel defaultSize={35} minSize={25}>
+                  <div className="h-full bg-gray-50/30">
+                    <AIView bookId={bookId} />
+                  </div>
+                </ResizablePanel>
+              </ResizablePanelGroup>
+            </div>
           </div>
         ) : (
           <div className="flex items-center justify-center h-screen">
