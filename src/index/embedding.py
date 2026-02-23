@@ -53,6 +53,8 @@ def chunk_and_embed(book: Book, client: OpenRouter, model: str) -> Book:
             i += 1
 
     book.embedding_model = model
+    for chapter in book.chapters:
+        chapter.text = ""
     return book
 
 

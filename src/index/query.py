@@ -29,7 +29,6 @@ Answer:
 
 def query(book: Book, client: OpenRouter, query: str):
     chunks = get_best_chunks(book, client, query)
-    print(user_prompt(chunks, query))
     response = client.chat.send(
         model="openai/gpt-5-nano",
         messages=[

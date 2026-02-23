@@ -1,6 +1,6 @@
 import pytest
-from book import Chapter
-from util import create_batches
+from src.index.book import Chapter
+from src.index.util import create_batches
 
 
 @pytest.mark.parametrize(

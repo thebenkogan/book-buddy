@@ -117,4 +117,5 @@ def chapterize(book: Book, client: OpenRouter) -> Book:
         chapter.tokens = count_tokens(chapter.text)
 
     book.chapters = chapters
+    book.text = ""
     return book
