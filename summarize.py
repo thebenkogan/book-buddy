@@ -4,6 +4,7 @@ from openrouter import OpenRouter
 from book import Book, Chapter
 import json
 from checkpoint import checkpoint
+from util import create_batches
 
 TOKENS_PER_BATCH = 30_000
 
@@ -12,7 +13,7 @@ TOKENS_PER_BATCH = 30_000
 def summarize(book: Book, client: OpenRouter) -> Book:
     print(f"Summarizing {book.title}")
 
-    batches = create_chapter_batches(book.chapters)
+    batches = create_batches(book.chapters, TOKENS_PER_BATCH)
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
         futures = [
             executor.submit(summarize_batch, client, book, batch) for batch in batches
@@ -23,25 +24,6 @@ def summarize(book: Book, client: OpenRouter) -> Book:
                 c.summary = s
 
     return book
-
-
-def create_chapter_batches(chapters: List[Chapter]):
-    batches = []
-    batch = []
-    size = 0
-    for chapter in chapters:
-        if size == 0 or size + chapter.tokens <= TOKENS_PER_BATCH:
-            batch.append(chapter)
-            size += chapter.tokens
-        else:
-            batches.append(batch)
-            batch = [chapter]
-            size = chapter.tokens
-
-    if batch:
-        batches.append(batch)
-    return batches
-
 
 def summarize_schema(num_chapters):
     return {

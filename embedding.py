@@ -6,6 +6,8 @@ from book import Book, Chunk
 from checkpoint import checkpoint
 import numpy as np
 
+from util import create_batches
+
 TOKENS_PER_EMBED_CALL = 200_000
 
 
@@ -33,7 +35,7 @@ def chunk_and_embed(book: Book, client: OpenRouter, model: str) -> Book:
         all_chunks.extend(chapter.chunks)
 
     # TODO: parallelize batch processing
-    chunk_batches = create_chunk_batches(all_chunks)
+    chunk_batches = create_batches(all_chunks, TOKENS_PER_EMBED_CALL)
     embeddings = []
     for batch in chunk_batches:
         print(f"Embedding batch of {len(batch)} chunks")
@@ -52,25 +54,6 @@ def chunk_and_embed(book: Book, client: OpenRouter, model: str) -> Book:
 
     book.embedding_model = model
     return book
-
-
-# TODO: DRY with chapter batching in summarize.py
-def create_chunk_batches(chunks: List[Chunk]):
-    batches = []
-    batch = []
-    size = 0
-    for chunk in chunks:
-        if size == 0 or size + chunk.tokens <= TOKENS_PER_EMBED_CALL:
-            batch.append(chunk)
-            size += chunk.tokens
-        else:
-            batches.append(batch)
-            batch = [chunk]
-            size = chunk.tokens
-
-    if batch:
-        batches.append(batch)
-    return batches
 
 
 NUM_TOP_CHUNKS = 3

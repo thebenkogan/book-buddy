@@ -1,6 +1,6 @@
 import pytest
 from book import Chapter
-from summarize import create_chapter_batches
+from util import create_batches
 
 
 @pytest.mark.parametrize(
@@ -46,7 +46,7 @@ from summarize import create_chapter_batches
         ),
     ],
 )
-def test_create_chapter_batches(chapters, expected):
-    batches = create_chapter_batches(chapters)
+def test_create_batches(chapters, expected):
+    batches = create_batches(chapters, 30_000)
     batches = [[c.name for c in batch] for batch in batches]
     assert batches == expected

@@ -1,5 +1,5 @@
 from pathlib import Path
-from book import Book, GutenbergBook
+from book import Book
 
 
 def checkpoint(name: str):
