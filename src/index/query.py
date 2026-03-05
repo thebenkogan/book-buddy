@@ -1,7 +1,7 @@
 from typing import List
 from openrouter import OpenRouter
-from book import Book, Chunk
-from embedding import get_best_chunks
+from .book import Book, Chunk
+from .embedding import get_best_chunks
 
 
 def system_prompt(book: Book):
@@ -41,10 +41,12 @@ def query(book: Book, client: OpenRouter, query: str):
                 "content": user_prompt(chunks, query),
             },
         ],
-        stream=True,
+        stream=False,
     )
 
-    for chunk in response:
-        content = chunk.choices[0].delta.content
-        if content:
-            print(content, end="", flush=True)
+    # for chunk in response:
+    #     content = chunk.choices[0].delta.content
+    #     if content:
+    #         print(content, end="", flush=True)]
+
+    return response.choices[0].message.content

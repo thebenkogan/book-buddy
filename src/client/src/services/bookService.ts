@@ -1,27 +1,27 @@
-import { Book, BookContent, AISummary, TableOfContents } from '@/types/types';
+import { Book, BookContent, AISummary, TableOfContents } from "@/types/types";
 
 // Mock data for development - replace with actual API calls to your Python backend
 const mockBooks: Book[] = [
   {
-    id: '1',
-    title: 'The Great Gatsby',
-    author: 'F. Scott Fitzgerald',
+    id: "1",
+    title: "The Great Gatsby",
+    author: "F. Scott Fitzgerald",
     progress: 45,
-    lastRead: new Date('2024-01-15'),
+    lastRead: new Date("2024-01-15"),
   },
   {
-    id: '2',
-    title: 'To Kill a Mockingbird',
-    author: 'Harper Lee',
+    id: "2",
+    title: "To Kill a Mockingbird",
+    author: "Harper Lee",
     progress: 78,
-    lastRead: new Date('2024-01-20'),
+    lastRead: new Date("2024-01-20"),
   },
   {
-    id: '3',
-    title: '1984',
-    author: 'George Orwell',
+    id: "3",
+    title: "1984",
+    author: "George Orwell",
     progress: 23,
-    lastRead: new Date('2024-01-10'),
+    lastRead: new Date("2024-01-10"),
   },
 ];
 
@@ -40,65 +40,65 @@ Most of the confidences were unsought — frequently I have feigned sleep, preoc
 const mockTableOfContents: TableOfContents = {
   chapters: [
     {
-      id: 'ch1',
-      name: 'In My Younger Years',
-      context: { 1: 'PART ONE', 2: 'THE BEGINNING' },
+      id: "ch1",
+      name: "In My Younger Years",
+      context: { 1: "PART ONE", 2: "THE BEGINNING" },
       startPosition: 0,
       endPosition: 1000,
     },
     {
-      id: 'ch2',
-      name: 'The Summer of 1922',
-      context: { 1: 'PART ONE', 2: 'THE BEGINNING' },
+      id: "ch2",
+      name: "The Summer of 1922",
+      context: { 1: "PART ONE", 2: "THE BEGINNING" },
       startPosition: 1001,
       endPosition: 2000,
     },
     {
-      id: 'ch3',
-      name: 'The Party',
-      context: { 1: 'PART ONE', 2: 'THE BEGINNING' },
+      id: "ch3",
+      name: "The Party",
+      context: { 1: "PART ONE", 2: "THE BEGINNING" },
       startPosition: 2001,
       endPosition: 3000,
     },
     {
-      id: 'ch4',
-      name: 'Meeting Gatsby',
-      context: { 1: 'PART TWO', 2: 'THE DISCOVERY' },
+      id: "ch4",
+      name: "Meeting Gatsby",
+      context: { 1: "PART TWO", 2: "THE DISCOVERY" },
       startPosition: 3001,
       endPosition: 4000,
     },
     {
-      id: 'ch5',
-      name: 'The Green Light',
-      context: { 1: 'PART TWO', 2: 'THE DISCOVERY' },
+      id: "ch5",
+      name: "The Green Light",
+      context: { 1: "PART TWO", 2: "THE DISCOVERY" },
       startPosition: 4001,
       endPosition: 5000,
     },
     {
-      id: 'ch6',
-      name: 'Daisy and Gatsby',
-      context: { 1: 'PART TWO', 2: 'THE DISCOVERY' },
+      id: "ch6",
+      name: "Daisy and Gatsby",
+      context: { 1: "PART TWO", 2: "THE DISCOVERY" },
       startPosition: 5001,
       endPosition: 6000,
     },
     {
-      id: 'ch7',
-      name: 'The Confrontation',
-      context: { 1: 'PART THREE', 2: 'THE RECKONING' },
+      id: "ch7",
+      name: "The Confrontation",
+      context: { 1: "PART THREE", 2: "THE RECKONING" },
       startPosition: 6001,
       endPosition: 7000,
     },
     {
-      id: 'ch8',
-      name: 'The Tragedy',
-      context: { 1: 'PART THREE', 2: 'THE RECKONING' },
+      id: "ch8",
+      name: "The Tragedy",
+      context: { 1: "PART THREE", 2: "THE RECKONING" },
       startPosition: 7001,
       endPosition: 8000,
     },
     {
-      id: 'ch9',
-      name: 'After the Fall',
-      context: { 1: 'PART THREE', 2: 'THE RECKONING' },
+      id: "ch9",
+      name: "After the Fall",
+      context: { 1: "PART THREE", 2: "THE RECKONING" },
       startPosition: 8001,
       endPosition: 9000,
     },
@@ -106,13 +106,13 @@ const mockTableOfContents: TableOfContents = {
 };
 
 // API functions - replace URLs with your actual Python API endpoints
-const API_BASE_URL = 'http://localhost:8000/api'; // Update with your API URL
+const API_BASE_URL = "http://localhost:8000/api"; // Update with your API URL
 
 export const getBooks = async (): Promise<Book[]> => {
   // TODO: Replace with actual API call
   // const response = await fetch(`${API_BASE_URL}/books`);
   // return response.json();
-  
+
   return new Promise((resolve) => {
     setTimeout(() => resolve(mockBooks), 300);
   });
@@ -122,47 +122,64 @@ export const getBookContent = async (bookId: string): Promise<BookContent> => {
   // TODO: Replace with actual API call
   // const response = await fetch(`${API_BASE_URL}/books/${bookId}/content`);
   // return response.json();
-  
+
   return new Promise((resolve) => {
-    setTimeout(() => resolve({
-      text: mockContent,
-      currentPosition: 0,
-    }), 300);
+    setTimeout(
+      () =>
+        resolve({
+          text: mockContent,
+          currentPosition: 0,
+        }),
+      300,
+    );
   });
 };
 
-export const getTableOfContents = async (bookId: string): Promise<TableOfContents> => {
+export const getTableOfContents = async (
+  bookId: string,
+): Promise<TableOfContents> => {
   // TODO: Replace with actual API call
   // const response = await fetch(`${API_BASE_URL}/books/${bookId}/toc`);
   // return response.json();
-  
+
   return new Promise((resolve) => {
     setTimeout(() => resolve(mockTableOfContents), 300);
   });
 };
 
-export const getAISummary = async (bookId: string, section?: string): Promise<AISummary> => {
+export const getAISummary = async (
+  bookId: string,
+  section?: string,
+): Promise<AISummary> => {
   // TODO: Replace with actual API call
   // const response = await fetch(`${API_BASE_URL}/books/${bookId}/summary`, {
   //   method: 'POST',
   //   body: JSON.stringify({ section }),
   // });
   // return response.json();
-  
+
   return new Promise((resolve) => {
-    setTimeout(() => resolve({
-      summary: "This opening chapter introduces the narrator and establishes the moral framework of the story. The narrator reflects on advice from his father about reserving judgment, which has shaped his character and made him a confidant to many people.",
-      keyPoints: [
-        "The narrator's father advised him to reserve judgment of others",
-        "This quality has attracted many people to confide in him",
-        "He was incorrectly labeled as a politician in college",
-        "The narrator is critical of how young men share their intimate revelations"
-      ]
-    }), 500);
+    setTimeout(
+      () =>
+        resolve({
+          summary:
+            "This opening chapter introduces the narrator and establishes the moral framework of the story. The narrator reflects on advice from his father about reserving judgment, which has shaped his character and made him a confidant to many people.",
+          keyPoints: [
+            "The narrator's father advised him to reserve judgment of others",
+            "This quality has attracted many people to confide in him",
+            "He was incorrectly labeled as a politician in college",
+            "The narrator is critical of how young men share their intimate revelations",
+          ],
+        }),
+      500,
+    );
   });
 };
 
-export const askQuestion = async (bookId: string, question: string): Promise<string> => {
+export const askQuestion = async (
+  bookId: string,
+  question: string,
+): Promise<string> => {
   // TODO: Replace with actual API call
   // const response = await fetch(`${API_BASE_URL}/books/${bookId}/ask`, {
   //   method: 'POST',
@@ -170,20 +187,25 @@ export const askQuestion = async (bookId: string, question: string): Promise<str
   // });
   // const data = await response.json();
   // return data.answer;
-  
+
   return new Promise((resolve) => {
     setTimeout(() => {
-      resolve("Based on the text, the narrator's father advised him to reserve judgment when criticizing others, reminding him that not everyone has had the same advantages. This advice has significantly influenced the narrator's approach to life and relationships.");
+      resolve(
+        "Based on the text, the narrator's father advised him to reserve judgment when criticizing others, reminding him that not everyone has had the same advantages. This advice has significantly influenced the narrator's approach to life and relationships.",
+      );
     }, 800);
   });
 };
 
-export const updateReadingProgress = async (bookId: string, progress: number): Promise<void> => {
+export const updateReadingProgress = async (
+  bookId: string,
+  progress: number,
+): Promise<void> => {
   // TODO: Replace with actual API call
   // await fetch(`${API_BASE_URL}/books/${bookId}/progress`, {
   //   method: 'PUT',
   //   body: JSON.stringify({ progress }),
   // });
-  
+
   console.log(`Updating progress for book ${bookId}: ${progress}%`);
 };

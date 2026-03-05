@@ -1,5 +1,5 @@
 from pathlib import Path
-from book import Book
+from .book import Book
 
 
 def checkpoint(name: str):
@@ -8,9 +8,7 @@ def checkpoint(name: str):
             if len(args) == 0 or not isinstance(args[0], Book):
                 raise ValueError("First argument must be a Book for checkpointing")
             book: Book = args[0]
-            cache_path = Path(
-                f"cache/{book.title.replace(' ', '_').lower()}_{name}.json"
-            )
+            cache_path = Path(f"cache/{book.book_id}_{name}.json")
             if cache_path.exists():
                 return book.__class__.model_validate_json(cache_path.read_text())
 

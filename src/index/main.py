@@ -1,11 +1,11 @@
 from openrouter import OpenRouter
 import os
 from dotenv import load_dotenv
-from book import GutenbergBook
-from chapterize import chapterize
-from embedding import chunk_and_embed
-from query import query
-from summarize import summarize
+from .book import GutenbergBook
+from .chapterize import chapterize
+from .embedding import chunk_and_embed
+from .query import query
+from .summarize import summarize
 
 load_dotenv()
 

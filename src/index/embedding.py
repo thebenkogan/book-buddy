@@ -2,11 +2,11 @@ from typing import List
 from openrouter import OpenRouter
 import semchunk
 import tiktoken
-from book import Book, Chunk
-from checkpoint import checkpoint
+from .book import Book, Chunk
+from .checkpoint import checkpoint
 import numpy as np
 
-from util import create_batches
+from .util import create_batches
 
 TOKENS_PER_EMBED_CALL = 200_000
 

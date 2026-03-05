@@ -1,10 +1,10 @@
 from typing import List
 from openrouter import OpenRouter
-from book import Book, Chapter
+from .book import Book, Chapter
 import json
 from rapidfuzz import fuzz
-from checkpoint import checkpoint
-from embedding import count_tokens
+from .checkpoint import checkpoint
+from .embedding import count_tokens
 
 chapterize_schema = {
     "name": "book_analysis",

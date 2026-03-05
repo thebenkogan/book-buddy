@@ -1,10 +1,10 @@
 import concurrent.futures
 from typing import List
 from openrouter import OpenRouter
-from book import Book, Chapter
+from .book import Book, Chapter
 import json
-from checkpoint import checkpoint
-from util import create_batches
+from .checkpoint import checkpoint
+from .util import create_batches
 
 TOKENS_PER_BATCH = 30_000
 

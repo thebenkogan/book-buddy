@@ -21,6 +21,7 @@ class Chapter(BaseModel):
 
 
 class Book(BaseModel, ABC):
+    book_id: str
     text: str
     title: str
     embedding_model: str = ""
@@ -28,7 +29,7 @@ class Book(BaseModel, ABC):
 
     @classmethod
     @abstractmethod
-    def from_file(cls, path: str, embedding_model: str) -> "Book":
+    def from_file(cls, path: str) -> "Book":
         pass
 
 
@@ -48,5 +49,6 @@ class GutenbergBook(Book):
         em = re.search(guten_end_regex, text)
         text = text[sm.end() : em.start()].lower()  # TODO: remove lower?
         title = sm.groups()[0]
+        book_id = title.replace(" ", "_").lower()
 
-        return cls(text=text, title=title, chapters=[])
+        return cls(text=text, title=title, book_id=book_id, chapters=[])
