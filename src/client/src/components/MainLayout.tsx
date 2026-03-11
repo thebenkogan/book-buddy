@@ -9,12 +9,12 @@ import { BookOpen } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { getBooks } from '@/services/bookService';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
-import { Chapter } from '@/types/types';
+import { TOCChapter } from '@/types/types';
 
 const MainLayout = () => {
   const { bookId } = useParams();
   const [currentPosition, setCurrentPosition] = useState(0);
-  const [scrollToChapter, setScrollToChapter] = useState<Chapter | null>(null);
+  const [scrollToChapter, setScrollToChapter] = useState<TOCChapter | null>(null);
 
   const { data: books } = useQuery({
     queryKey: ['books'],
@@ -23,8 +23,9 @@ const MainLayout = () => {
 
   const currentBook = books?.find(b => b.id === bookId);
 
-  const handleChapterClick = (chapter: Chapter) => {
+  const handleChapterClick = (chapter: TOCChapter) => {
     setScrollToChapter(chapter);
+    setCurrentPosition(chapter.startPosition);
     // Reset after a short delay to allow for multiple clicks on the same chapter
     setTimeout(() => setScrollToChapter(null), 100);
   };
@@ -32,7 +33,7 @@ const MainLayout = () => {
   return (
     <div className="flex min-h-screen w-full">
       <BookSidebar />
-      
+
       <SidebarInset className="flex-1 w-full min-w-0">
         {bookId ? (
           <div className="flex flex-col h-screen">
@@ -53,29 +54,29 @@ const MainLayout = () => {
                 {/* Table of Contents */}
                 <ResizablePanel defaultSize={20} minSize={15} maxSize={30}>
                   <div className="h-full p-4 bg-gray-50/50">
-                    <TableOfContents 
-                      bookId={bookId} 
+                    <TableOfContents
+                      bookId={bookId}
                       currentPosition={currentPosition}
                       onChapterClick={handleChapterClick}
                     />
                   </div>
                 </ResizablePanel>
-                
+
                 <ResizableHandle withHandle />
-                
+
                 {/* Reading View */}
                 <ResizablePanel defaultSize={45} minSize={30}>
                   <div className="h-full bg-white">
-                    <ReadingView 
-                      bookId={bookId} 
+                    <ReadingView
+                      bookId={bookId}
                       onPositionChange={setCurrentPosition}
                       scrollToChapter={scrollToChapter}
                     />
                   </div>
                 </ResizablePanel>
-                
+
                 <ResizableHandle withHandle />
-                
+
                 {/* AI Analysis View */}
                 <ResizablePanel defaultSize={35} minSize={25}>
                   <div className="h-full bg-gray-50/30">

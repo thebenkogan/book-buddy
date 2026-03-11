@@ -2,25 +2,16 @@ import glob
 import logging
 from pathlib import Path
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException, Depends, Request
+from fastapi import APIRouter, FastAPI, HTTPException, Depends, Request
 from openrouter import OpenRouter
 from src.index.book import GutenbergBook
 from pydantic import BaseModel
 from src.index.query import query
 import os
 from dotenv import load_dotenv
+from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv()
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    client = OpenRouter(api_key=os.getenv("OPENROUTER_API_KEY"))
-    app.state.openrouter_client = client
-    yield
-
-
-app = FastAPI(title="Book API", lifespan=lifespan)
 
 
 def get_openrouter_client(request: Request) -> OpenRouter:
@@ -31,9 +22,10 @@ def get_openrouter_client(request: Request) -> OpenRouter:
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 CACHE_DIR = PROJECT_ROOT / "cache"
 DATA_DIR = PROJECT_ROOT / "data"
+router = APIRouter(prefix="/api/v1")
 
 
-@app.get("/books")
+@router.get("/books")
 def get_books():
     """Return all books on my shelf."""
     books = []
@@ -49,7 +41,7 @@ def get_books():
     return books
 
 
-@app.get("/books/{book_id}/content")
+@router.get("/books/{book_id}/content")
 def get_book_text(book_id: str):
     """Return the entire book text by reading from the data directory."""
     # Security: ensure path doesn't escape data dir
@@ -68,7 +60,7 @@ def get_book_text(book_id: str):
         raise HTTPException(status_code=500)
 
 
-@app.get("/books/{book_id}/toc")
+@router.get("/books/{book_id}/toc")
 def get_table_of_contents(book_id: str):
     """Return the entire Book index object from cache."""
     index_path = CACHE_DIR / f"{book_id}_embeddings.json"
@@ -95,7 +87,7 @@ def get_table_of_contents(book_id: str):
         raise HTTPException(status_code=500)
 
 
-@app.get("/books/{book_id}/summary")
+@router.get("/books/{book_id}/summary")
 def get_summary(book_id: str):
     """Return a summary of what was recently read."""
     index_path = CACHE_DIR / f"{book_id}_embeddings.json"
@@ -119,7 +111,7 @@ class AskQuestionRequest(BaseModel):
     question: str
 
 
-@app.post("/books/{book_id}/ask")
+@router.post("/books/{book_id}/ask")
 def ask_question(
     book_id: str,
     request: AskQuestionRequest,
@@ -139,3 +131,21 @@ def ask_question(
     except Exception as e:
         logging.exception(f"Error reading book '{book_id}': {e}")
         raise HTTPException(status_code=500)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    client = OpenRouter(api_key=os.getenv("OPENROUTER_API_KEY"))
+    app.state.openrouter_client = client
+    yield
+
+
+app = FastAPI(title="Book API", lifespan=lifespan)
+app.include_router(router)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,  # Allows cookies/auth headers
+    allow_methods=["*"],  # Allows all methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allows all headers
+)

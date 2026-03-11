@@ -12,23 +12,27 @@ export interface BookContent {
   currentPosition: number;
 }
 
-export interface Chapter {
-  id: string;
+export interface TOCChapter {
+  id: number;
   name: string;
   context?: {
     [rank: number]: string;
   };
   startPosition: number;
-  endPosition: number;
+  endPosition?: number;
 }
 
 export interface TableOfContents {
-  chapters: Chapter[];
+  chapters: TOCChapter[];
 }
 
 export interface AISummary {
   summary: string;
   keyPoints: string[];
+}
+
+export interface AskResponse {
+  answer: string;
 }
 
 export interface ChatMessage {
