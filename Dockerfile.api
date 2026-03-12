@@ -1,0 +1,28 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+RUN pip install --no-cache-dir --upgrade pip
+
+# ONLY copy the files needed for installation (Layer Caching)
+# This layer will ONLY rebuild if your pyproject.toml changes
+COPY pyproject.toml ./
+
+# Install dependencies (but not the local package yet)
+RUN pip install --no-cache-dir -e . 2>/dev/null || pip install --no-cache-dir . --dry-run || true
+
+# NOW copy the rest of your app
+COPY README.md ./README.md
+COPY cache ./cache
+COPY data ./data
+COPY src ./src
+
+# Final install to link the local 'src' (very fast)
+RUN pip install --no-cache-dir --no-deps .
+
+EXPOSE 8000
+
+CMD ["uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000"]

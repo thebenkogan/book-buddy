@@ -1,6 +1,13 @@
-import { Book, BookContent, AISummary, TableOfContents, AskResponse } from "@/types/types";
+import {
+  Book,
+  BookContent,
+  AISummary,
+  TableOfContents,
+  AskResponse,
+} from "@/types/types";
 
-const API_BASE_URL = "http://localhost:8000/api/v1";
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000/api/v1";
 
 export const getBooks = async (): Promise<Book[]> => {
   const response = await fetch(`${API_BASE_URL}/books`);
@@ -28,9 +35,7 @@ export const getTableOfContents = async (
   return response.json();
 };
 
-export const getAISummary = async (
-  bookId: string,
-): Promise<AISummary> => {
+export const getAISummary = async (bookId: string): Promise<AISummary> => {
   const response = await fetch(`${API_BASE_URL}/books/${bookId}/summary`);
   if (!response.ok) {
     throw new Error(`Failed to fetch summary for book: ${bookId}`);
@@ -54,4 +59,29 @@ export const askQuestion = async (
   }
   const data: AskResponse = await response.json();
   return data.answer;
+};
+
+export interface ReadingProgressPayload {
+  userId: string;
+  currentChapter: number;
+}
+
+export const updateReadingProgress = async (
+  bookId: string,
+  payload: ReadingProgressPayload,
+): Promise<void> => {
+  const response = await fetch(`${API_BASE_URL}/books/${bookId}/progress`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      user_id: payload.userId,
+      current_chapter: payload.currentChapter,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to update reading progress for book: ${bookId}`);
+  }
 };
