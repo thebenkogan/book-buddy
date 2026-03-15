@@ -4,6 +4,7 @@ import {
   AISummary,
   TableOfContents,
   AskResponse,
+  SearchResponse,
 } from "@/types/types";
 
 const API_BASE_URL =
@@ -83,5 +84,56 @@ export const updateReadingProgress = async (
 
   if (!response.ok) {
     throw new Error(`Failed to update reading progress for book: ${bookId}`);
+  }
+};
+
+export const searchBooks = async (query?: string): Promise<SearchResponse> => {
+  const params = query ? `?query=${encodeURIComponent(query)}` : "";
+  const response = await fetch(`${API_BASE_URL}/books/search${params}`);
+  if (!response.ok) {
+    throw new Error("Failed to search books");
+  }
+  return response.json();
+};
+
+export const addBookToShelf = async (
+  bookId: string,
+  userId: string,
+): Promise<void> => {
+  const response = await fetch(
+    `${API_BASE_URL}/books/${bookId}/add?user_id=${encodeURIComponent(userId)}`,
+    {
+      method: "POST",
+    },
+  );
+  if (!response.ok) {
+    throw new Error("Failed to add book to shelf");
+  }
+};
+
+export interface RequestBookPayload {
+  userId: string;
+  bookId: string;
+  title: string;
+  author: string;
+}
+
+export const requestBook = async (
+  payload: RequestBookPayload,
+): Promise<void> => {
+  const response = await fetch(`${API_BASE_URL}/books/request`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      user_id: payload.userId,
+      book_id: payload.bookId,
+      title: payload.title,
+      author: payload.author,
+    }),
+  });
+  if (!response.ok) {
+    throw new Error("Failed to request book");
   }
 };

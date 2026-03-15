@@ -27,12 +27,24 @@ pytest
 
 # Format code
 black src/
+```
 
-# Type check
-mypy src/
+### Docker (use Makefile)
 
-# Lint (if using ruff)
-ruff check src/
+```bash
+# Build images
+make build
+
+# Start services
+make up
+
+# Stop services
+make down
+
+# View logs
+make logs
+make logs-api
+make logs-client
 ```
 
 ### TypeScript Frontend
@@ -91,6 +103,8 @@ bun run typecheck
 - Use `@classmethod` for factory methods (e.g., `from_file`)
 - Use `abc` module for abstract base classes
 - Use dataclasses/Pydantic models for structured data
+- Modularize API: use separate route files with their own `APIRouter`
+- Keep shared config in `config.py`
 
 ### TypeScript/JavaScript
 
@@ -118,12 +132,54 @@ bun run typecheck
 - Use functional components with hooks
 - Export components as named exports
 - Use React Query for async data fetching
+- Use `sonner` for toasts
 
 **Patterns**
-- Use `sonner` for toasts
 - Use `cva` + `clsx` + `tailwind-merge` for component variants
 - Follow Radix UI patterns for accessible components
 - Use React Router for navigation
+
+## API Structure
+
+```
+src/api/
+├── __init__.py
+├── config.py         # Paths, env vars (MONGO_URI, GUTENDEX_BASE_URL)
+├── dependencies.py   # get_mongo_db, get_openrouter_client
+├── models.py         # Pydantic request/response models
+├── main.py           # App initialization, lifespan, router includes
+└── routes/
+    ├── search.py     # GET /books/search
+    ├── books.py      # GET /books, POST /books/{id}/add, POST /books/request, PUT /books/{id}/progress
+    └── reading.py    # GET /books/{id}/content, /toc, /summary, POST /ask
+```
+
+Each route module defines its own `APIRouter` with appropriate prefix (e.g., `/api/v1/books`).
+
+## External APIs
+
+### Gutendex API
+
+Project Gutenberg's free ebook metadata API at `https://gutendex.com/`.
+
+Key endpoints:
+- `GET /books` - List books (supports `search`, `languages`, `topic`, `sort`, `page`, `mime_type` params)
+- `GET /books/<id>` - Get single book
+
+All searches use default params: `mime_type=text/plain` and `languages=en` to filter for plain text English books.
+
+For random/popular results without a query, use jittered params (random page, topic, sort) to get varied results.
+
+## Frontend Pages
+
+```
+src/client/src/pages/
+├── HomePage.tsx    # Search/discover books, add to shelf, request books
+├── Index.tsx       # Legacy redirect
+└── NotFound.tsx
+```
+
+HomePage uses React Query with `enabled` flag to only fetch on user action (not on every keystroke).
 
 ## Key File Locations
 
@@ -132,16 +188,19 @@ bun run typecheck
 - Frontend components: `src/client/src/components/`
 - Frontend pages: `src/client/src/pages/`
 - Types: `src/client/src/types/types.ts`
-- API services: `src/client/src/services/`
+- API services: `src/client/src/services/bookService.ts`
 
 ## Testing
 
 - Python tests: `tests/` directory
 - Use pytest with `@pytest.mark.parametrize` for parametrized tests
 - Run single test: `pytest path/to/test.py::test_name`
+- Use `fastapi.testclient.TestClient` for endpoint testing
 
 ## Environment
 
 - Python 3.10+
 - Uses `python-dotenv` for env vars (`.env` file)
 - API keys go in `.env` (already in `.gitignore`)
+- MongoDB is optional for local development (app logs warning but continues)
+- Docker Compose handles MongoDB for containerized development

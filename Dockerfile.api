@@ -5,23 +5,18 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-RUN pip install --no-cache-dir --upgrade pip
+RUN pip install --no-cache-dir uv
 
-# ONLY copy the files needed for installation (Layer Caching)
-# This layer will ONLY rebuild if your pyproject.toml changes
+# Copy only dependency files first (for layer caching)
 COPY pyproject.toml ./
 
-# Install dependencies (but not the local package yet)
-RUN pip install --no-cache-dir -e . 2>/dev/null || pip install --no-cache-dir . --dry-run || true
+# Install dependencies using uv (cached unless pyproject.toml changes)
+RUN uv pip install --system --no-cache -r pyproject.toml
 
-# NOW copy the rest of your app
-COPY README.md ./README.md
+# NOW copy the rest of your app (this layer rebuilds on code changes)
 COPY cache ./cache
 COPY data ./data
 COPY src ./src
-
-# Final install to link the local 'src' (very fast)
-RUN pip install --no-cache-dir --no-deps .
 
 EXPOSE 8000
 

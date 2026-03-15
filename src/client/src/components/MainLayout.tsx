@@ -1,27 +1,33 @@
-import { useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
-import BookSidebar from '@/components/BookSidebar';
-import ReadingView from '@/components/ReadingView';
-import AIView from '@/components/AIView';
-import TableOfContents from '@/components/TableOfContents';
-import { BookOpen } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { getBooks } from '@/services/bookService';
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
-import { TOCChapter } from '@/types/types';
+import { useState } from "react";
+import { useParams } from "react-router-dom";
+import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import BookSidebar from "@/components/BookSidebar";
+import ReadingView from "@/components/ReadingView";
+import AIView from "@/components/AIView";
+import TableOfContents from "@/components/TableOfContents";
+import { BookOpen } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { getBooks } from "@/services/bookService";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
+import { TOCChapter } from "@/types/types";
 
 const MainLayout = () => {
   const { bookId } = useParams();
   const [currentPosition, setCurrentPosition] = useState(0);
-  const [scrollToChapter, setScrollToChapter] = useState<TOCChapter | null>(null);
+  const [scrollToChapter, setScrollToChapter] = useState<TOCChapter | null>(
+    null,
+  );
 
   const { data: books } = useQuery({
-    queryKey: ['books'],
+    queryKey: ["books"],
     queryFn: getBooks,
   });
 
-  const currentBook = books?.find(b => b.id === bookId);
+  const currentBook = books?.find((b) => b.id === bookId);
 
   const handleChapterClick = (chapter: TOCChapter) => {
     setScrollToChapter(chapter);
@@ -41,9 +47,13 @@ const MainLayout = () => {
             <header className="flex items-center gap-4 border-b bg-white px-6 py-4 sticky top-0 z-10">
               <SidebarTrigger />
               <div className="flex-1">
-                <h1 className="text-2xl font-bold">{currentBook?.title || 'Book'}</h1>
+                <h1 className="text-2xl font-bold">
+                  {currentBook?.title || "Book"}
+                </h1>
                 {currentBook?.author && (
-                  <p className="text-sm text-muted-foreground">by {currentBook.author}</p>
+                  <p className="text-sm text-muted-foreground">
+                    by {currentBook.author}
+                  </p>
                 )}
               </div>
             </header>
@@ -94,7 +104,8 @@ const MainLayout = () => {
               </div>
               <h2 className="text-2xl font-bold">Welcome to BookBuddy AI</h2>
               <p className="text-muted-foreground max-w-md">
-                Select a book from the sidebar to start reading or analyzing with AI
+                Select a book from the sidebar to start reading or analyzing
+                with AI
               </p>
             </div>
           </div>

@@ -7,6 +7,21 @@ export interface Book {
   lastRead?: Date;
 }
 
+export interface SearchBook {
+  book_id: string;
+  title: string;
+  author: string;
+  download_count: number;
+  languages: string[];
+  indexed: boolean;
+  cover_url?: string;
+}
+
+export interface SearchResponse {
+  count: number;
+  results: SearchBook[];
+}
+
 export interface BookContent {
   text: string;
   currentPosition: number;
@@ -37,7 +52,7 @@ export interface AskResponse {
 
 export interface ChatMessage {
   id: string;
-  role: 'user' | 'assistant';
+  role: "user" | "assistant";
   content: string;
   timestamp: Date;
 }

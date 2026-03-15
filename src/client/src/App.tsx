@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Routes, Route, BrowserRouter } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import MainLayout from "@/components/MainLayout";
+import HomePage from "@/pages/HomePage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -18,7 +19,7 @@ function App() {
           <Sonner />
           <SidebarProvider>
             <Routes>
-              <Route path="/" element={<MainLayout />} />
+              <Route path="/" element={<HomePage />} />
               <Route path="/book/:bookId" element={<MainLayout />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

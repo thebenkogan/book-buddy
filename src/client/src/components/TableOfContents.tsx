@@ -30,7 +30,8 @@ const TableOfContents = ({
   // Group chapters by their hierarchical context
   const groupedChapters = toc?.chapters.reduce<GroupedChapters>(
     (acc, chapter, index) => {
-      const nextChapter = index + 1 < toc.chapters.length ? toc.chapters[index + 1] : null;
+      const nextChapter =
+        index + 1 < toc.chapters.length ? toc.chapters[index + 1] : null;
       chapter.endPosition = nextChapter ? nextChapter.startPosition : Infinity;
       const contextKeys = Object.keys(chapter.context || {}).sort(
         (a, b) => Number(a) - Number(b),
@@ -84,7 +85,7 @@ const TableOfContents = ({
 
                   {/* Chapters in this section */}
                   <div className="space-y-1">
-                    {chapters.map((chapter, index) => {
+                    {chapters.map((chapter) => {
                       const isActive =
                         currentPosition >= chapter.startPosition &&
                         currentPosition < chapter.endPosition;

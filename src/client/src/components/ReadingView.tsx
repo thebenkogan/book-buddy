@@ -1,9 +1,9 @@
-import { useQuery } from '@tanstack/react-query';
-import { getBookContent, getTableOfContents } from '@/services/bookService';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useEffect, useRef, useState, useMemo } from 'react';
-import { TOCChapter } from '@/types/types';
+import { useQuery } from "@tanstack/react-query";
+import { getBookContent, getTableOfContents } from "@/services/bookService";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useEffect, useRef, useState, useMemo } from "react";
+import { TOCChapter } from "@/types/types";
 
 interface ReadingViewProps {
   bookId: string;
@@ -11,28 +11,36 @@ interface ReadingViewProps {
   scrollToChapter?: TOCChapter | null;
 }
 
-const ReadingView = ({ bookId, onPositionChange, scrollToChapter }: ReadingViewProps) => {
+const ReadingView = ({
+  bookId,
+  onPositionChange,
+  scrollToChapter,
+}: ReadingViewProps) => {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const chapterRefs = useRef<Map<number, HTMLSpanElement>>(new Map());
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { data: content, isLoading: contentLoading } = useQuery({
-    queryKey: ['bookContent', bookId],
+    queryKey: ["bookContent", bookId],
     queryFn: () => getBookContent(bookId),
   });
 
   const { data: toc } = useQuery({
-    queryKey: ['tableOfContents', bookId],
+    queryKey: ["tableOfContents", bookId],
     queryFn: () => getTableOfContents(bookId),
   });
 
   const chapters = useMemo(() => {
     if (!toc?.chapters || !content?.text) return [];
 
-    const sorted = [...toc.chapters].sort((a, b) => a.startPosition - b.startPosition);
+    const sorted = [...toc.chapters].sort(
+      (a, b) => a.startPosition - b.startPosition,
+    );
     return sorted.map((chapter, index) => {
       const nextChapter = sorted[index + 1];
-      const endPosition = nextChapter ? nextChapter.startPosition : content.text.length;
+      const endPosition = nextChapter
+        ? nextChapter.startPosition
+        : content.text.length;
       return {
         ...chapter,
         endPosition,
@@ -43,7 +51,9 @@ const ReadingView = ({ bookId, onPositionChange, scrollToChapter }: ReadingViewP
 
   // Handle scroll events - find which chapter span is visible
   useEffect(() => {
-    const viewport = scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]');
+    const viewport = scrollAreaRef.current?.querySelector(
+      "[data-radix-scroll-area-viewport]",
+    );
     if (!viewport || chapters.length === 0) return;
 
     const handleScroll = () => {
@@ -70,9 +80,9 @@ const ReadingView = ({ bookId, onPositionChange, scrollToChapter }: ReadingViewP
       }, 100);
     };
 
-    viewport.addEventListener('scroll', handleScroll);
+    viewport.addEventListener("scroll", handleScroll);
     return () => {
-      viewport.removeEventListener('scroll', handleScroll);
+      viewport.removeEventListener("scroll", handleScroll);
       if (debounceRef.current) {
         clearTimeout(debounceRef.current);
       }
@@ -84,7 +94,7 @@ const ReadingView = ({ bookId, onPositionChange, scrollToChapter }: ReadingViewP
     if (scrollToChapter && scrollAreaRef.current) {
       const span = chapterRefs.current.get(scrollToChapter.id);
       if (span) {
-        span.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        span.scrollIntoView({ behavior: "smooth", block: "start" });
       }
     }
   }, [scrollToChapter]);
