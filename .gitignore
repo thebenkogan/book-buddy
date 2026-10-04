@@ -1,7 +1,9 @@
 .env
 ***/*.txt
+# Generated at runtime: TOCs, candidate pools, reader positions, Qdrant
+# collections and embeddings. All rebuildable -- never commit them.
+cache/
 __pycache__
-.venv
-cache
-data
 .pytest_cache
+.venv
+*.egg-info

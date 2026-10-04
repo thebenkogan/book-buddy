@@ -1,3 +1,15 @@
+> **SUPERSEDED (2026-10-04).** This document describes a FastAPI
+> backend, a React/Vite frontend and Docker -- **all of which were deleted.**
+> The product is now a CLI and library. Below, the "Stack", "Run", "Docker" and
+> "Layout" sections are kept only as a record of what was tried and rejected.
+> For how the system works now, read `src/bookbuddy/` and
+> `skills/book-buddy/onboard-book/SKILL.md`.
+>
+> The prior recommendation in `ARCHITECTURE.md` -- drop the RAG, put the whole
+> book in context with prompt caching -- was **tried and reversed**. Retrieval
+> is Qdrant, and the spoiler gate is a native `ordinal <= reader_ordinal`
+> range filter, not prompt wording.
+
 # AGENTS.md
 
 This file provides guidelines for agentic coding agents working in this repository.
@@ -20,13 +32,13 @@ uv sync
 uvicorn src.api.main:app --reload --port 8000
 
 # Run a single test
-pytest tests/test_util.py::test_create_batches
+uv run pytest tests/test_util.py::test_create_batches
 
 # Run all tests
-pytest
+uv run pytest
 
 # Format code
-black src/
+uv run black src/
 ```
 
 ### Docker (use Makefile)
