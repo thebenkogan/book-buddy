@@ -123,9 +123,13 @@ env -u PYTHONPATH uv run python scripts/ask.py "<their question>"
 Prints the saved position, the numbered passages, and the answering rules.
 Make NO further model call. Answer from what it printed.
 
-Optional second arg for a different book: `scripts/ask.py "q" les_mis`. Do not
-guess a book id — list them with `ls data/*.txt` and strip the extension, so a
-wrong guess never reads the wrong book.
+With no book id, `ask.py` answers from the book whose position file was written
+most recently — the one he is reading — and prints that choice in the `BOOK :`
+line, so it is never a silent guess. Naming the book (`scripts/ask.py "q"
+les_mis`) overrides it. Never invent a book id: they are the filenames in
+`data/` without `.txt`, so a wrong guess reads the wrong book. Position, notes
+and the doc are all per-book (`cache/<book>_position.json`, `<book>_notes.json`),
+so nothing here assumes which book he is on.
 
 ## Quick Reference
 

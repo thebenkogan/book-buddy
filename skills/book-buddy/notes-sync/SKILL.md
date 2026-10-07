@@ -77,7 +77,7 @@ earn its place against that test.
   ratio (`N bullets for M sections`) — if it is above 2, cut before appending.
   The budget is per-section on purpose: it holds whatever the book's size or
   granularity, so a long history and a short novel both end up as a digest you
-  can read in one sitting (the whole Jewish War is 117 sections → ~150 bullets).
+  can read in one sitting (a 117-section history → roughly 150 bullets).
 - **Bold a short key phrase in every bullet** with `**...**` (a few words to a
   clause — e.g. "**Claudius became emperor**", "**killed 10,000 Jews**").
   `gdoc_notes.py` turns the markers into real bold runs; the existing doc uses
@@ -166,7 +166,7 @@ everything.
    ```
 
    Prints the section list and the range text (up to 20k chars); the full text
-   is always in `cache/jewish_war_range.txt` — read that file in chunks if the
+   is always in `cache/<book>_range.txt` — read that file in chunks if the
    printed text was truncated. The range is exactly the delta between two
    spoiler gates, so it cannot contain anything past the new ordinal.
    Check that `FROM` equals the doc's current tail; if the script says "nothing

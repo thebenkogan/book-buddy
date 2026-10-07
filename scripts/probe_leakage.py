@@ -71,6 +71,10 @@ from src.bookbuddy.book import (  # noqa: E402
     verify_toc,
 )
 
+#: The corpus this probe suite was hand-authored against. The PROBES below are
+#: Jewish War markers, so this is NOT a parameter to swap: pointing it at
+#: another book without rewriting every marker would produce nonsense. The
+#: reading workflow itself is book-agnostic (see scripts/ask.py).
 DATA = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
     "data",
