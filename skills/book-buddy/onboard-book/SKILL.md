@@ -1,14 +1,14 @@
 ---
 name: onboard-book
-description: Onboard a book: build its TOC, index it, prove the gate.
-version: 2.0.0
+description: Onboard a book: TOC, index, gate, notes doc.
+version: 2.1.0
 author: Ben Kogan (benkogan), Hermes Agent
 license: MIT
 platforms: [linux, macos]
 metadata:
   hermes:
-    tags: [book-buddy, rag, spoiler, onboarding, gutenberg]
-    related_skills: [read-book, probe-leakage]
+    tags: [book-buddy, rag, spoiler, onboarding, gutenberg, google-docs]
+    related_skills: [read-book, probe-leakage, book-notes-sync]
 ---
 
 # Onboard a book into book-buddy
@@ -34,6 +34,10 @@ to step in, not a step you always take.
 - The audit reports problems you want to fix by hand.
 - `SCHEMA_VERSION` changed, or retrieval looks wrong.
 
+Onboarding a book also means creating its Google Doc notes file (step 7) —
+Ben reviews those files when he finishes a book, so a book without one is only
+half onboarded.
+
 Don't use for: answering questions (`read-book`), measuring leakage
 (`probe-leakage`).
 
@@ -58,6 +62,10 @@ uv run python scripts/toc_apply.py data/<f>.txt --verdicts verdicts.json
 uv run python scripts/onboard_book.py data/<f>.txt --force
 uv run python scripts/save_position.py <book> <ordinal> --note "..."
 uv run pytest -q
+
+# 4. create the book's Google Doc notes file (see step 7)
+uv run --with google-api-python-client --with google-auth \
+  python scripts/new_notes_doc.py <book> --title "<Title> (<Author>)"
 ```
 
 ## Procedure
@@ -131,11 +139,16 @@ costs you nothing.
 ### 4. Delegate every slice, in one `delegate_task` call
 
 One `tasks` entry per slice, 40-60 candidates each. Each subagent's `context`
-MUST contain the verbatim candidate text from step 3. A subagent given only
-"decide on candidates 1-46" has nothing to read and will (correctly) return an
-empty array rather than invent data -- I made that mistake and it cost a round.
+must name **the candidates file and its exact index range** -- that is the whole
+input. A subagent given only "decide on candidates 1-46" has nothing to read
+and will (correctly) return an empty array rather than invent data; I made that
+mistake and it cost a round.
 
-Put this AFTER the candidate block in each task's `context`:
+Tell each subagent what KIND of book it is looking at. It cannot infer that
+"THE GOLDEN BIRD" is a chapter and "'O man of the sea!" is a line of verse
+from the line alone -- that judgement is the entire reason the fallback exists.
+
+Prompt template, one per task:
 
 ```
 Decide which candidate lines are REAL chapter/volume headings in this book.
@@ -182,6 +195,30 @@ ordinal — a stale ordinal silently points at different text. Read
 rewrite it. Assert the resolved section is the one you expect before saving.
 
 *Done: position points at the intended passage.*
+
+### 7. Create the notes doc
+
+A book is not onboarded until it has its Google Doc notes file — that file is
+the artifact Ben reviews when he finishes, and it has to exist from the first
+reading update onward.
+
+```bash
+uv run --with google-api-python-client --with google-auth \
+  python scripts/new_notes_doc.py <book> --title "<Title> (<Author>)"
+```
+
+Name it the way the Jewish War one is named: `Jewish War (Josephus)`,
+`Les Miserables (Victor Hugo)`. It lands in the same Drive folder ("Books") as
+the other notes docs, and the script writes
+`cache/<book>_notes.json` with `last_ordinal: 0` — meaning nothing of this
+book's text has been summarized yet, so the first reading update starts at
+section 1. The doc body starts empty on purpose; notes accrue one reading
+update at a time (`book-notes-sync`).
+
+Then tell Ben the doc is ready with its link. Do not paste chapter headings or
+a skeleton into it.
+
+*Done: `cache/<book>_notes.json` exists with a real doc_id and `last_ordinal: 0`.*
 
 ## Pitfalls
 

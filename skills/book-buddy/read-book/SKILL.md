@@ -1,14 +1,15 @@
 ---
 name: read-book
-description: Answer questions about a book at the reader's position.
-version: 1.0.0
+description: Use for ANY question about a book Ben is reading. RAG only.
+version: 1.1.0
 author: Ben Kogan (benkogan), Hermes Agent
 license: MIT
 platforms: [linux, macos]
 metadata:
   hermes:
-    tags: [book-buddy, rag, reading, spoiler, citation]
+    tags: [book-buddy, rag, reading, spoiler, citation, mandatory]
     related_skills: [onboard-book, probe-leakage]
+    always_load_for: [book questions, reading position, character recall]
 ---
 
 # Read a book with book-buddy
@@ -19,11 +20,45 @@ passages they have already read, answer from those alone, cite them.
 **You are the model.** Retrieval decides what you may consult; you do the
 answering. Never call OpenRouter to summarise passages you already retrieved.
 
+## MANDATORY: never answer a book question any other way
+
+If the question is about the contents of a book Ben is reading, this skill is
+the only permitted path. Specifically, all of these are violations:
+
+- Answering from `data/*.txt`, a raw file read, a `search_files`/`grep` pass, or
+  a manual `load_book` / `text_up_to` / `build_toc` call. Retrieval decides what
+  you may consult; a raw text dump is unretrieved, unranked context and will
+  silently include chapters past his position.
+- Answering from parametric memory of the book.
+- Answering from a previous session's transcript or from a cached answer.
+- Citing character offsets, char positions, or `cache/*_position.json` as
+  if they were passages. Position metadata is not a citation.
+
+`scripts/ask.py` is the only sanctioned retrieval. Its printed passages, in
+their `[n]` numbering, are the only things you may cite. If you have not run it
+in this turn, you have not retrieved, and any answer you give is ungrounded —
+run it first.
+
 ## When to Use
 
-- The reader asks a question about a book they are reading.
-- They move their reading position ("I've read to where...").
-- They report a wrong or unhelpful answer.
+Load this skill whenever the question touches a book's CONTENT or PROGRESS.
+Triggers include, non-exhaustively:
+
+- "who is <character>", "what happened to", "why did", "when did", "where is"
+- "what was that name again", "remind me what X did" - pure recall questions
+- "what am I at", "where did I get to", "how far am I" - position questions
+- "recap", "summarise so far", "what have I read"
+- any named book of his: The Jewish War, Les Miserables, or anything in
+  `data/`
+- "did that book say", "does the text mention", "is it mentioned in the book"
+- him reporting a book answer as wrong or spoilery
+- "I read to <point>" / "I'm up to <point>" — that is a NEW POSITION report: use
+  the `book-notes-sync` skill, which moves the saved position AND appends the
+  newly-read key points to his Google Doc notes file. Do not answer it from
+  `ask.py` passages.
+
+Do NOT use for: adding a new book (`onboard-book`), measuring leakage
+(`probe-leakage`).
 
 Don't use for: adding a new book (`onboard-book`), measuring leakage
 (`probe-leakage`).
@@ -33,27 +68,73 @@ Don't use for: adding a new book (`onboard-book`), measuring leakage
 - Repo: `~/code/book-buddy`.
 - `OPENROUTER_API_KEY` — **embeddings only**. Export before retrieving:
   `set -a && . ~/.hermes/.env && set +a`
+- **Prefix every `uv run` with `env -u PYTHONPATH`.** The shell exports
+  `PYTHONPATH` into Hermes's own venv, so a plain `uv run` imports `pydantic`
+  from the wrong tree and dies with `ModuleNotFoundError: No module named
+  'pydantic_core._pydantic_core'`. The prefix is the fix, not another
+  interpreter.
+
+## Where the saved position lives
+
+`cache/<book_id>_position.json`, one file per book — the single source of truth
+for how far he has read:
+
+```json
+{"book_id": "jewish_war", "ordinal": 44, "label": "BOOK II. / CHAPTER 9.",
+ "note": "...", "chars_read": 350732, "pct_of_book": 27.3}
+```
+
+`ordinal` is what gates retrieval; `label` and `note` are the human summary he
+sees. A note ending `[re-anchored by offset after the TOC was rebuilt to N
+sections]` means the ordinal was saved against a char offset, not a section
+index — do not "fix" it by counting sections.
+
+Update it only via `scripts/save_position.py <book> <ordinal> --note "..."`.
+Never hand-edit the JSON.
+
+## Position questions ("where am I at", "how far am I")
+
+Retrieval cannot answer these — the passages it returns are unrelated to his
+cursor, and the `POSITION:` header `ask.py` prints is **metadata, not a
+passage**. So there is nothing to cite and you must not manufacture a `[n]`.
+
+Answer like this:
+
+- Read the `POSITION:` line `ask.py` already printed. It carries the ordinal,
+  the section label, and his own last note.
+- Reply in 2–4 sentences: where he is, and the single most concrete thing that
+  happens there (usually the end of the note).
+- Say plainly that this is his saved position, not retrieved text — e.g.
+  "that's from your saved position, not a passage" — so he knows the
+  provenance. No `Sources:` block.
+- Point at the next section by label, from the label in the header only.
+- Still no spoilers: the header's ordinal is the ceiling on what he may know.
+
+Do not run retrieval "to be thorough" here, and do not retry hoping for
+passages that answer a question retrieval structurally cannot answer.
 
 ## How to Run
 
 ```bash
 cd ~/code/book-buddy && set -a && . ~/.hermes/.env && set +a
-uv run python scripts/ask.py "<their question>"
+env -u PYTHONPATH uv run python scripts/ask.py "<their question>"
 ```
 
 Prints the saved position, the numbered passages, and the answering rules.
 Make NO further model call. Answer from what it printed.
 
-Optional second arg for a different book: `scripts/ask.py "q" les_mis`.
+Optional second arg for a different book: `scripts/ask.py "q" les_mis`. Do not
+guess a book id — list them with `ls data/*.txt` and strip the extension, so a
+wrong guess never reads the wrong book.
 
 ## Quick Reference
 
 ```bash
-uv run python scripts/ask.py "<question>" [book_id]   # retrieve, no model call
-uv run python scripts/save_position.py <book> <ordinal> --note "..."
-uv run python scripts/onboard_book.py data/<file>.txt # new book
-uv run python scripts/probe_leakage.py                # leak measurement
-uv run pytest -q                                      # 167 tests, offline
+env -u PYTHONPATH uv run python scripts/ask.py "<question>" [book_id]   # retrieve, no model call
+env -u PYTHONPATH uv run python scripts/save_position.py <book> <ordinal> --note "..."
+env -u PYTHONPATH uv run python scripts/onboard_book.py data/<file>.txt # new book
+env -u PYTHONPATH uv run python scripts/probe_leakage.py                # leak measurement
+env -u PYTHONPATH uv run pytest -q                                      # 199 tests, offline
 ```
 
 ## Procedure
